@@ -1,0 +1,32 @@
+# 虚拟环境
+venv/
+env/
+*.venv
+
+# Django 数据库
+*.sqlite3
+*.db
+
+# 日志文件
+*.log
+
+# 静态文件收集目录
+staticfiles/
+static/
+
+# 媒体文件
+media/
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 环境变量文件
+.env
+.env.local

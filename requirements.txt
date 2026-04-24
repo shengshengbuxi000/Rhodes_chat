@@ -1,0 +1,7 @@
+django==4.2.10
+djangorestframework
+django-cors-headers
+python-dotenv
+requests
+gunicorn
+whitenoise
