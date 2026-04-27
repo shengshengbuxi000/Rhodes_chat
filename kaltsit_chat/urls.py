@@ -6,6 +6,7 @@ from .views import (
     GetHistoryView,
     DownloadHistoryView,
     RollbackView,
+    ImportHistoryView,
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('get_history/', GetHistoryView.as_view()),
     path('download_history/', DownloadHistoryView.as_view()),
     path('rollback/', RollbackView.as_view()),
+    path('import_history/', ImportHistoryView.as_view()),
 ]
