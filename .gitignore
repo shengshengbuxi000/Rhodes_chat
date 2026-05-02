@@ -12,7 +12,6 @@ env/
 
 # 静态文件收集目录
 staticfiles/
-static/
 
 # 媒体文件
 media/

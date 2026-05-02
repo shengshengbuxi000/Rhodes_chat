@@ -21,10 +21,16 @@ load_dotenv()
 
 # -------------------------- 核心配置：从JSON文件读取提示词 --------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
-PROMPTS_FILE = BASE_DIR / 'prompts' / 'kaltsit_prompts.json'
+SYSTEM_PROMPT_FILE = BASE_DIR / 'prompts' / 'kaltsit_prompts.txt'
 
-with open(PROMPTS_FILE, 'r', encoding='utf-8') as f:
-    CHARACTER_PROMPTS = json.load(f)
+with open(SYSTEM_PROMPT_FILE, 'r', encoding='utf-8') as f:
+    KALTSIT_SYSTEM_PROMPT = f.read()
+
+# 保持 CHARACTER_PROMPTS 字典结构，便于其他角色扩展（如有）
+CHARACTER_PROMPTS = {
+    "kaltsit": KALTSIT_SYSTEM_PROMPT,
+    # 以后如需添加其他角色，可以继续加
+}
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")

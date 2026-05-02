@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>罗德岛医疗部终端 - 支持我们</title>
+
+    <!-- 完全复制主页面的所有核心样式，不依赖任何外部文件 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0a0f11;
+            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            color: #4cd964;
+            line-height: 1.5;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .terminal-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            border: 1px solid #4cd964;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            border-bottom: 1px solid #4cd964;
+            background-color: rgba(76, 217, 100, 0.05);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .download-btn {
+            background-color: transparent;
+            border: 1px solid #4cd964;
+            color: #4cd964;
+            padding: 5px 12px;
+            font-family: "Consolas", "Monaco", "Courier New", monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .download-btn:hover {
+            background-color: #4cd964;
+            color: #0a0f11;
+        }
+
+        .terminal-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .rhodes-logo {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .terminal-content {
+            height: 80vh;
+            padding: 15px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .system-prompt {
+            color: #888;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .message-block {
+            margin: 10px 0;
+            padding: 0;
+            line-height: 1.8;
+            font-size: 16px;
+            white-space: normal;
+        }
+
+        .kaltsit-message {
+            text-align: left;
+        }
+
+        .cmd-prefix {
+            color: #4cd964;
+            font-weight: bold;
+        }
+
+        /* 滚动条样式 */
+        .terminal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-content::-webkit-scrollbar-track {
+            background: #0a0f11;
+        }
+
+        .terminal-content::-webkit-scrollbar-thumb {
+            background: #4cd964;
+            border-radius: 4px;
+        }
+
+        /* 二维码样式，保证不变形 */
+        .qr-code {
+            max-width: 220px;
+            max-height: 220px;
+            object-fit: contain;
+            background-color: white;
+            padding: 5px;
+            margin: 15px auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <!-- 终端头部（和主页面完全一致） -->
+        <div class="terminal-header">
+            <button class="download-btn" onclick="window.location.href='index.html'">⬅ 返回聊天终端</button>
+            <div class="terminal-title">RHODES ISLAND - MEDICAL DEPARTMENT TERMINAL V1.4.5</div>
+            <div class="rhodes-logo">授权访问：博士 | 加密级别：α | IP绑定模式：已启用</div>
+        </div>
+
+        <!-- 终端内容区（和聊天页面完全一样） -->
+        <div class="terminal-content">
+            <div class="system-prompt">[系统] 欢迎进入罗德岛终端支持页面</div>
+            <div class="system-prompt">[系统] 本项目为个人非盈利同人作品，所有收入将全部用于支付服务器及AI接口费用</div>
+            <br><br>
+
+            <!-- 微信收款码 -->
+            <div class="message-block kaltsit-message" style="text-align: center;">
+                <span class="cmd-prefix">> 系统：💚 微信支持</span><br><br>
+                <img src="wechat-donate.jpg" alt="微信收款码" class="qr-code"><br>
+                <span>纯自愿捐赠，无任何回报</span><br>
+                <span>所有收入将用于支付DeepSeek API和服务器费用</span>
+            </div>
+
+            <br><br>
+
+            <!-- 支付宝收款码 -->
+            <div class="message-block kaltsit-message" style="text-align: center;">
+                <span class="cmd-prefix">> 系统：💙 支付宝支持</span><br><br>
+                <img src="alipay-donate.jpg" alt="支付宝收款码" class="qr-code"><br>
+                <span>纯自愿捐赠，无任何回报</span><br>
+                <span>所有收入将用于支付DeepSeek API和服务器费用</span>
+            </div>
+
+            <br><br>
+
+            <!-- QQ群二维码 -->
+            <div class="message-block kaltsit-message" style="text-align: center;">
+                <span class="cmd-prefix">> 系统：💬 加入交流群</span><br><br>
+                <img src="qq-group.jpg" alt="QQ群二维码" class="qr-code"><br>
+                <span>交流游戏心得，反馈bug和建议</span><br>
+                <span>获取项目最新更新通知</span>
+            </div>
+
+            <br><br>
+
+            <!-- 法律声明 -->
+            <div class="system-prompt">[法律声明]</div>
+            <div class="message-block kaltsit-message">
+                <span>1. 本网站为个人非盈利同人作品，不涉及任何商业活动</span><br>
+                <span>2. 所有捐赠均为用户自愿行为，不提供任何形式的回报或特权</span><br>
+                <span>3. 捐赠资金将专款专用，仅用于支付服务器、域名及AI接口费用</span><br>
+                <span>4. 每月收支情况将在本页面更新公示，接受所有用户监督</span><br>
+                <span>5. 本项目与明日方舟官方及鹰角网络无任何关联</span>
+            </div>
+
+            <br><br>
+
+            <!-- 收支公示 -->
+            <div class="system-prompt">[2026年4月收支公示]</div>
+            <div class="message-block kaltsit-message">
+                <span>▪ 捐赠收入：242元</span><br>
+                <span>▪ 支出：服务器80元 + DeepSeek API 115元 = 195元</span><br>
+                <span>▪ 结余：47元</span><br><br>
+                <span style="font-size: 12px; color: #888;">最后更新时间：2026年4月28日</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

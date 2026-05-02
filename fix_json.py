@@ -1,11 +1,11 @@
 import json
 
 # 原文件路径
-input_file = 'prompts/scene_prompts.json'
+input_file = 'prompts/kaltsit_prompts.json'
 # 备份文件路径
-backup_file = 'prompts/scene_prompts.json.backup'
+backup_file = 'prompts/kaltsit_prompts.json.backup'
 # 修复后文件路径
-output_file = 'prompts/scene_prompts.json'
+output_file = 'prompts/kaltsit_prompts.json'
 
 try:
     # 1. 先备份原文件
