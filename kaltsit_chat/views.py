@@ -105,7 +105,56 @@ class GetIpUserIdView(View):
             "success": True
         })
 
-# 2. 核心对话接口
+# ========== 总结函数（放在 views.py 顶部工具函数区域） ==========
+async def summarize_history(history_messages: list) -> str:
+    """
+    对给定的消息列表进行总结，返回摘要字符串
+    history_messages: list of dict with keys 'role', 'content'
+    """
+    if not history_messages:
+        return "（无历史内容）"
+
+    summary_prompt = {
+        "role": "system",
+        "content": "你是一个总结助手。请将以下对话提炼成一段简洁的摘要（100字以内），保留关键信息：话题、事件、情绪或重要结论。只输出摘要，不要输出其他内容。"
+    }
+
+    # 将消息列表转换为文本
+    history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history_messages])
+
+    # 如果文本太长，可以截断前3000字符避免超限
+    if len(history_text) > 3000:
+        history_text = history_text[:3000] + "……（已截断）"
+
+    request_data = {
+        "model": "deepseek-v4-flash",
+        "messages": [
+            summary_prompt,
+            {"role": "user", "content": f"请总结以下对话：\n{history_text}"}
+        ],
+        "temperature": 0.3,
+        "max_tokens": 200,
+        "stream": False
+    }
+
+    try:
+        response = requests.post(
+            url=DEEPSEEK_API_URL,
+            headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"},
+            json=request_data,
+            timeout=15
+        )
+        response.raise_for_status()
+        result = response.json()
+        summary = result["choices"][0]["message"]["content"].strip()
+        # 添加说明，提示模型后续基于此摘要
+        return f"【以下为最近10条历史对话摘要，后续对话请基于此摘要并结合最新消息】\n{summary}"
+    except Exception as e:
+        logger.warning(f"历史总结失败：{e}")
+        return "（总结失败）"
+
+
+# ========== 修改后的 ChatView（定时触发，只总结最近10条消息，不含保留的最近6条） ==========
 @method_decorator(csrf_exempt, name='dispatch')
 class ChatView(View):
     async def post(self, request):
@@ -113,21 +162,73 @@ class ChatView(View):
             data = json.loads(request.body)
             user_id = data.get('user_id')
             character = data.get('character', 'kaltsit')
-            message = data.get('message', '').strip()
+            original_message = data.get('message', '').strip()
 
-            if not user_id or not message:
+            if not user_id or not original_message:
                 return JsonResponse({"code": 400, "reply": "缺少必要参数", "success": False})
             if character not in CHARACTER_PROMPTS:
                 return JsonResponse({"code": 400, "reply": "该角色暂未上线", "success": False})
 
-            history = await async_get_history(user_id, character)
-            request_data = {
-                "model": "deepseek-v4-flash",
-                "messages": [
+            # 格式提醒（方案三）
+            user_message_with_hint = (
+                original_message +
+                "\n\n【格式提醒】回复中括号内的动作/神态描写：指代凯尔希必须用“她”，指代博士必须用“你”。"
+                "例如：（她放下报告，抬眼看向你）。引号对话中凯尔希自称“我”，称呼博士为“你”。"
+                "请严格遵守，不要用“我”或“他”来描述括号内的动作。"
+            )
+
+            # 获取完整历史（按时间正序）
+            history = await async_get_history(user_id, character)   # list of dict
+
+            # ----- 定时触发总结配置 -----
+            USE_SUMMARY = True
+            SUMMARY_INTERVAL = 12            # 每12条消息触发一次总结（历史消息总数）
+            KEEP_RECENT = 6                  # 保留最近6条消息完整
+            # 需要总结的消息数量（最近的不含保留的6条）
+            SUMMARY_COUNT = 12               # 总结最近10条
+
+            total_messages = len(history)
+
+            # 触发条件：
+            # 1. 总消息数 >= (KEEP_RECENT + SUMMARY_COUNT) 才能提取出10条需要总结的消息
+            # 2. 总消息数达到 SUMMARY_INTERVAL 的整数倍
+            min_required = KEEP_RECENT + SUMMARY_COUNT   # = 16
+            should_summarize = (
+                USE_SUMMARY and 
+                total_messages >= min_required and 
+                total_messages % SUMMARY_INTERVAL == 0
+            )
+
+            if should_summarize:
+                # 需要总结的消息：倒数第 (KEEP_RECENT+SUMMARY_COUNT) 条 到 倒数第 (KEEP_RECENT+1) 条
+                # 即 history[-16:-6]  （因为 -16 到 -6 不包含 -6 本身，包含 -16）
+                start = - (KEEP_RECENT + SUMMARY_COUNT)   # -16
+                end = - KEEP_RECENT                       # -6
+                to_summarize = history[start:end]         # 长度为 SUMMARY_COUNT 的列表
+                recent_history = history[-KEEP_RECENT:] if KEEP_RECENT > 0 else []
+
+                # 生成总结
+                summary_text = await summarize_history(to_summarize)
+
+                # 构建 messages：系统提示 + 总结 + 最近6条消息 + 当前用户消息（带提醒）
+                messages = [
+                    {"role": "system", "content": CHARACTER_PROMPTS[character]},
+                    {"role": "system", "content": summary_text}
+                ] + recent_history + [
+                    {"role": "user", "content": user_message_with_hint}
+                ]
+            else:
+                # 不满足阈值，直接使用完整历史
+                messages = [
                     {"role": "system", "content": CHARACTER_PROMPTS[character]},
                     *history,
-                    {"role": "user", "content": message}
-                ],
+                    {"role": "user", "content": user_message_with_hint}
+                ]
+
+            # 构造请求数据
+            request_data = {
+                "model": "deepseek-v4-flash",
+                "messages": messages,
                 "temperature": 0.85,
                 "max_tokens": 2000,
                 "stream": False
@@ -135,6 +236,8 @@ class ChatView(View):
 
             if not DEEPSEEK_API_KEY:
                 return JsonResponse({"code": 500, "reply": "未配置API密钥", "success": False})
+
+            # 调用 DeepSeek API
             response = requests.post(
                 url=DEEPSEEK_API_URL,
                 headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"},
@@ -145,7 +248,8 @@ class ChatView(View):
             result = response.json()
             reply_content = result["choices"][0]["message"]["content"].strip()
 
-            await async_save_chat(user_id, character, 'user', message)
+            # 保存原始消息和回复
+            await async_save_chat(user_id, character, 'user', original_message)
             await async_save_chat(user_id, character, 'assistant', reply_content)
 
             return JsonResponse({"code": 200, "reply": reply_content, "success": True})
