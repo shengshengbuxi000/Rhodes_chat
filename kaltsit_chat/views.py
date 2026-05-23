@@ -133,7 +133,7 @@ async def summarize_history(history_messages: list) -> str:
             {"role": "user", "content": f"请总结以下对话：\n{history_text}"}
         ],
         "temperature": 0.3,
-        "max_tokens": 200,
+        "max_tokens": 2000,
         "stream": False
     }
 
@@ -227,7 +227,7 @@ class ChatView(View):
 
             # 构造请求数据
             request_data = {
-                "model": "deepseek-v4-flash",
+                "model": "deepseek-v4-pro",
                 "messages": messages,
                 "temperature": 0.85,
                 "max_tokens": 2000,
