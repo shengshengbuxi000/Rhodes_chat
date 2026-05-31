@@ -2,285 +2,800 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>罗德岛医疗部终端 | 凯尔希对话系统</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* 全局重置 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ========== CSS Variables ========== */
+        :root {
+            --bg-deep: #060b0e;
+            --bg-terminal: #0c1216;
+            --bg-header: #111a1f;
+            --bg-input: #0a1014;
+            --border: #1e3a3a;
+            --border-accent: #2a5a5a;
+            --green-primary: #4cd964;
+            --green-dim: #2a8a3a;
+            --green-glow: rgba(76, 217, 100, 0.15);
+            --cyan: #5ac8fa;
+            --orange: #ff9500;
+            --orange-dim: #cc7700;
+            --gray-text: #7a8a8e;
+            --gray-dim: #4a5a5e;
+            --doctor-bg: rgba(90, 200, 250, 0.06);
+            --doctor-border: rgba(90, 200, 250, 0.2);
+            --kaltsit-bg: rgba(76, 217, 100, 0.04);
+            --kaltsit-border: rgba(76, 217, 100, 0.15);
+            --font-mono: "Consolas", "Monaco", "Courier New", monospace;
+            --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-glow: 0 0 30px rgba(76, 217, 100, 0.08);
         }
 
-        /* 罗德岛终端核心样式 */
+        /* ========== Reset ========== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ========== Body ========== */
         body {
-            background-color: #0a0f11;
-            font-family: "Consolas", "Monaco", "Courier New", monospace;
-            color: #4cd964;
-            line-height: 1.5;
-            padding: 20px;
-            overflow-x: hidden;
-        }
-
-        /* 终端容器 */
-        .rhodes-terminal {
-            max-width: 1000px;
-            margin: 0 auto;
-            border: 2px solid #2a3a40;
-            border-radius: 8px;
-            background-color: #12191b;
-            box-shadow: 0 0 20px rgba(76, 217, 100, 0.15);
+            background-color: var(--bg-deep);
+            font-family: var(--font-sans);
+            color: var(--green-primary);
+            line-height: 1.6;
+            min-height: 100vh;
             overflow: hidden;
+            padding: 16px 20px 20px 20px;
         }
 
-        /* 终端头部 */
+        /* ========== Scanline Overlay ========== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.03) 2px,
+                rgba(0, 0, 0, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ========== Full-screen Layout ========== */
+        .app-layout {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 36px);
+            max-width: 960px;
+            margin: 0 auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* ========== Terminal Header ========== */
         .terminal-header {
-            background-color: #2a3a40;
-            padding: 8px 15px;
+            background: linear-gradient(180deg, var(--bg-header) 0%, rgba(17, 26, 31, 0.95) 100%);
+            border-bottom: 1px solid var(--border-accent);
+            padding: 0;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .header-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid #4cd964;
-            flex-wrap: wrap;
+            padding: 10px 16px;
+            gap: 12px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
             gap: 10px;
         }
 
-        /* 按钮组容器 */
-        .header-buttons {
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            border: 1.5px solid var(--green-primary);
+            border-radius: 50%;
             display: flex;
-            flex-wrap: nowrap;
-            gap: 8px;
             align-items: center;
-        }
-
-        .download-btn, .upload-btn {
-            background-color: #2a3a40;
-            color: #4cd964;
-            border: 1px solid #4cd964;
-            border-radius: 4px;
-            padding: 4px 10px;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-        .download-btn:hover, .upload-btn:hover {
-            background-color: #4cd964;
-            color: #12191b;
-        }
-
-        .upload-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            background-color: #1a2428;
-        }
-
-        /* 发送中禁用按钮样式 */
-        .sending {
-            pointer-events: none;
-            opacity: 0.6;
-        }
-
-        .terminal-title {
+            justify-content: center;
             font-size: 14px;
-            color: #4cd964;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-family: var(--font-mono);
+            color: var(--green-primary);
+            background: rgba(76, 217, 100, 0.08);
+            flex-shrink: 0;
         }
 
-        .rhodes-logo {
-            font-size: 12px;
-            color: #a0a8ac;
+        .brand-text {
+            display: flex;
+            flex-direction: column;
         }
 
-        /* 终端内容区 */
+        .brand-title {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--green-primary);
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .brand-sub {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--gray-dim);
+            letter-spacing: 0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        /* ========== Buttons ========== */
+        .btn {
+            background: transparent;
+            border: 1px solid var(--border-accent);
+            color: var(--gray-text);
+            padding: 5px 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn:hover {
+            border-color: var(--green-primary);
+            color: var(--green-primary);
+            background: rgba(76, 217, 100, 0.06);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn--danger:hover {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.06);
+        }
+
+        .btn--accent {
+            border-color: var(--green-dim);
+            color: var(--green-primary);
+        }
+
+        .btn--accent:hover {
+            background: var(--green-primary);
+            color: var(--bg-deep);
+        }
+
+        /* Header divider line with glow */
+        .header-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, var(--green-dim) 30%, var(--green-primary) 50%, var(--green-dim) 70%, transparent 100%);
+            opacity: 0.4;
+        }
+
+        /* ========== Chat Area ========== */
         .terminal-content {
-            height: 600px;
-            padding: 15px;
+            flex: 1;
             overflow-y: auto;
+            padding: 16px 20px;
             scroll-behavior: smooth;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(76, 217, 100, 0.02) 0%, transparent 60%),
+                var(--bg-terminal);
         }
 
         .terminal-content::-webkit-scrollbar {
-            width: 8px;
+            width: 5px;
         }
         .terminal-content::-webkit-scrollbar-track {
-            background: #12191b;
+            background: transparent;
         }
         .terminal-content::-webkit-scrollbar-thumb {
-            background: #2a3a40;
-            border-radius: 4px;
+            background: var(--border);
+            border-radius: 10px;
         }
         .terminal-content::-webkit-scrollbar-thumb:hover {
-            background: #4cd964;
+            background: var(--green-dim);
         }
 
+        /* ========== System Messages ========== */
         .system-prompt {
-            color: #ff9500;
-            margin: 5px 0;
+            font-family: var(--font-mono);
+            color: var(--gray-dim);
+            font-size: 12px;
+            margin: 4px 0;
+            padding: 2px 0;
+            letter-spacing: 0.3px;
         }
 
+        .system-prompt::before {
+            content: '>';
+            color: var(--orange-dim);
+            margin-right: 6px;
+            opacity: 0.6;
+        }
+
+        .scene-desc {
+            font-family: var(--font-mono);
+            color: var(--gray-text);
+            margin: 3px 0 3px 18px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .loading-tip {
+            color: var(--orange) !important;
+            animation: pulse-text 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-text {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ========== Chat Messages ========== */
         .message-block {
             margin: 10px 0;
-            line-height: 1.5;
-        }
-        .doctor-message {
-            color: #5ac8fa;
-        }
-        .kaltsit-message {
-            color: #4cd964;
-        }
-        .cmd-prefix {
-            color: #ff9500;
-            user-select: none;
-        }
-        .action-desc {
-            color: #a0a8ac;
-            font-style: italic;
-            display: inline;
-            margin: 0 !important;
-            padding: 0 !important;
-            line-height: 1.8 !important;
-            font-size: inherit !important;
-            white-space: normal !important;
+            display: flex;
+            gap: 0;
+            animation: msg-fade-in 0.35s ease-out;
         }
 
-        .terminal-input-area {
-            padding: 15px;
-            border-top: 1px solid #2a3a40;
+        @keyframes msg-fade-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Avatar */
+        .msg-avatar {
+            display: none;
+        }
+
+        .doctor-message .msg-avatar {
+            display: none;
+        }
+
+        .kaltsit-message .msg-avatar {
+            display: none;
+        }
+
+        /* Bubble */
+        .msg-bubble {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .msg-name {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .doctor-message .msg-name {
+            color: var(--cyan);
+        }
+
+        .kaltsit-message .msg-name {
+            color: var(--green-primary);
+        }
+
+        .msg-body {
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            line-height: 1.8;
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .doctor-message .msg-body {
+            background: var(--doctor-bg);
+            border: 1px solid var(--doctor-border);
+            color: #c8e6f8;
+        }
+
+        .kaltsit-message .msg-body {
+            background: var(--kaltsit-bg);
+            border: 1px solid var(--kaltsit-border);
+            color: #b8e8c0;
+        }
+
+        .action-desc {
+            color: var(--gray-text) !important;
+            font-style: italic;
+            display: inline;
+            opacity: 0.85;
+        }
+
+        /* ========== Typing Indicator ========== */
+        .typing-indicator {
             display: flex;
-            align-items: flex-start;
-            background-color: #0f1618;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 14px;
+            color: var(--green-dim);
+            font-family: var(--font-mono);
+            font-size: 12px;
         }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green-dim);
+            border-radius: 50%;
+            animation: typing-bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing-bounce {
+            0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1); }
+        }
+
+        /* ========== Input Area ========== */
+        .terminal-input-area {
+            background: var(--bg-input);
+            border-top: 1px solid var(--border);
+            padding: 8px 16px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
         .input-prefix {
-            color: #ff9500;
-            margin-right: 8px;
+            font-family: var(--font-mono);
+            color: var(--orange);
+            font-size: 14px;
             user-select: none;
-            margin-top: 5px;
+            flex-shrink: 0;
+            align-self: flex-end;
+            padding-bottom: 5px;
+            line-height: 1.4;
         }
+
         #message-input {
             flex: 1;
-            background-color: transparent;
-            border: none;
+            background: rgba(76, 217, 100, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             outline: none;
-            color: #4cd964;
-            font-family: inherit;
-            font-size: 16px;
-            padding: 5px 0;
+            color: #c8e6c0;
+            font-family: var(--font-sans);
+            font-size: 14px;
+            padding: 5px 10px;
             white-space: pre-wrap;
             word-wrap: break-word;
-            min-height: 24px;
-            max-height: 200px;
+            min-height: 30px;
+            max-height: 160px;
             overflow-y: auto;
             resize: none;
-            line-height: 1.5;
+            line-height: 1.4;
+            transition: border-color 0.25s;
+            scrollbar-width: none;
         }
-        #send-btn, #clear-history-btn {
-            background-color: #2a3a40;
-            color: #4cd964;
-            border: 1px solid #4cd964;
-            border-radius: 4px;
-            padding: 6px 15px;
-            font-family: inherit;
+        #message-input::-webkit-scrollbar {
+            display: none;
+        }
+
+        #message-input:focus {
+            border-color: var(--green-dim);
+            box-shadow: 0 0 0 1px rgba(76, 217, 100, 0.1);
+        }
+
+        #message-input::placeholder {
+            color: var(--gray-dim);
+            font-size: 13px;
+        }
+
+        .input-btn-group {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        #send-btn {
+            background: var(--green-dim);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 8px 20px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
-            margin-left: 10px;
-            transition: all 0.2s;
-            margin-top: 5px;
+            transition: all 0.25s;
+            letter-spacing: 0.5px;
         }
-        #send-btn:hover, #clear-history-btn:hover {
-            background-color: #4cd964;
-            color: #12191b;
+
+        #send-btn:hover {
+            background: var(--green-primary);
+            box-shadow: 0 0 12px rgba(76, 217, 100, 0.3);
         }
+
+        #send-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #clear-history-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--gray-dim);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        #clear-history-btn:hover {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        /* Sending state */
+        .sending { pointer-events: none; opacity: 0.5; }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 768px) {
+          /* 修复1：适配iOS安全区，避开顶部灵动岛和底部横条 */
+          body { 
+              padding: 0;
+              padding-top: env(safe-area-inset-top);
+              padding-bottom: env(safe-area-inset-bottom);
+          }
+      
+          /* 修复2：使用动态视口高度dvh，自动减去浏览器UI元素高度 */
+          .app-layout { 
+              max-width: 100%; 
+              height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+              border-radius: 0; 
+              border: none; 
+          }
+      
+          /* 以下所有代码和你原来的完全一样，一点都没改 */
+          .header-top {
+              flex-wrap: wrap;
+              padding: 8px 12px;
+              gap: 8px;
+          }
+      
+          .brand-sub { display: none; }
+      
+          .header-actions {
+              width: 100%;
+              justify-content: flex-start;
+              overflow-x: auto;
+              padding-bottom: 4px;
+              -webkit-overflow-scrolling: touch;
+          }
+      
+          .header-actions::-webkit-scrollbar { display: none; }
+      
+          .btn { font-size: 10px; padding: 4px 8px; }
+      
+          .terminal-content { 
+              padding: 12px 14px;
+              /* 修复3：给内容区额外预留底部空间，防止被网址栏遮挡 */
+              padding-bottom: calc(12px + 50px);
+          }
+      
+          .msg-body { padding: 8px 10px; font-size: 14px; }
+      
+          .terminal-input-area {
+              gap: 6px;
+              align-items: flex-end;
+              padding: 6px 10px;
+              /* 修复4：给输入框区域额外预留底部空间 */
+              padding-bottom: calc(10px + env(safe-area-inset-bottom));
+          }
+      
+          #message-input {
+              font-size: 16px; /* prevent iOS zoom */
+              min-height: 28px;
+              max-height: 120px;
+              padding: 3px 8px;
+              line-height: 1.25;
+          }
+      
+          .input-btn-group {
+              display: flex;
+              gap: 4px;
+          }
+      
+          #send-btn { padding: 8px 12px; margin: 0; font-size: 12px; }
+          #clear-history-btn { padding: 8px 8px; margin: 0; font-size: 10px; }
+      }
+
+        @media (max-width: 400px) {
+            .brand-icon { display: none; }
+        }
+
+        /* ========== Blinking cursor (decorative) ========== */
         .blinking-cursor {
             display: inline-block;
-            width: 8px;
-            height: 18px;
-            background-color: #4cd964;
+            width: 2px;
+            height: 16px;
+            background: var(--green-primary);
+            animation: blink 1s step-end infinite;
             margin-left: 2px;
-            animation: blink 1s infinite;
-            margin-top: 7px;
+            vertical-align: middle;
         }
+
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
         }
-        .loading-tip {
-            color: #ff9500;
-            font-style: italic;
+
+        /* ========== Status Bar ========== */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 16px;
+            background: var(--bg-header);
+            border-top: 1px solid var(--border);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--gray-dim);
+            flex-shrink: 0;
         }
-        .scene-desc {
-            color: #a0a8ac;
-            margin: 3px 0;
-            padding-left: 10px;
-            font-size: 14px;
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green-primary);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+            animation: status-pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes status-pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--green-primary); }
+            50% { opacity: 0.5; box-shadow: none; }
+        }
+
+        /* ========== Loading Screen ========== */
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-deep);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* Center diamond */
+        .loader-diamond-wrap {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader-diamond {
+            width: 56px;
+            height: 56px;
+            border: 3.5px solid rgba(255, 255, 255, 0.85);
+            transform: rotate(45deg);
+            animation: diamond-breathe 2.4s ease-in-out infinite;
+        }
+
+        @keyframes diamond-breathe {
+            0%, 100% {
+                border-color: rgba(255, 255, 255, 0.5);
+                box-shadow:
+                    0 0 4px rgba(255, 255, 255, 0.1),
+                    0 0 4px rgba(255, 255, 255, 0.1);
+            }
+            50% {
+                border-color: rgba(255, 255, 255, 1);
+                box-shadow:
+                    0 0 14px rgba(255, 255, 255, 0.6),
+                    0 0 28px rgba(255, 255, 255, 0.25),
+                    0 0 4px rgba(255, 255, 255, 0.8),
+                    0 0 4px rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        /* Boot text */
+        .loader-boot-text {
+            font-family: 'Orbitron', var(--font-mono);
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--gray-dim);
+            line-height: 1.6;
+            text-align: center;
+            min-height: 20px;
+            margin-bottom: 28px;
+            letter-spacing: 2px;
+        }
+
+        .loader-boot-line {
+            opacity: 0;
+            animation: boot-line-appear 0.4s ease forwards;
+        }
+
+        .loader-boot-line .boot-value {
+            color: var(--green-primary);
+        }
+
+        .loader-boot-line .boot-ok {
+            color: var(--green-primary);
+            font-weight: 600;
+        }
+
+        @keyframes boot-line-appear {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ECG / Heartbeat line */
+        .loader-ecg {
+            width: 150px;
+            height: 84px;
+            position: relative;
+            margin-bottom: 4px;
+        }
+
+        .loader-ecg canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            will-change: transform;
+        }
+
+        .loader-ecg-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--green-dim);
+            letter-spacing: 2px;
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        /* Horizontal scan line moving down */
+        .loading-screen::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--green-primary), transparent);
+            opacity: 0.15;
+            animation: loader-scanline 2s linear infinite;
+        }
+
+        @keyframes loader-scanline {
+            from { top: -2px; }
+            to { top: 100%; }
         }
 
         @media (max-width: 768px) {
-            .terminal-content { height: 400px; }
-            .terminal-header { flex-direction: column; align-items: stretch; gap: 12px; }
-            .header-buttons { flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
-            .header-buttons .download-btn,
-            .header-buttons .upload-btn {
-                flex: 0 0 auto;
-                min-width: 90px;
-                text-align: center;
-                margin: 0;
-                white-space: nowrap;
-            }
-            .terminal-title, .rhodes-logo { text-align: center; }
-            .terminal-input-area { flex-wrap: wrap; gap: 8px; align-items: center; }
-            .input-prefix { width: 100%; margin-bottom: 0; margin-top: 0; }
-            #message-input { width: 100% !important; flex: 0 0 100% !important; max-height: 120px; padding: 8px 10px; }
-            .input-btn-group { margin-left: auto; display: flex; gap: 5px; }
-            #clear-history-btn, #send-btn { margin: 0; padding: 6px 10px; }
-            .blinking-cursor { display: none; }
+            .loader-diamond-wrap { width: 80px; height: 80px; margin-bottom: 24px; }
+            .loader-diamond { width: 44px; height: 44px; }
+            .loader-boot-text { font-size: 11px; min-height: 20px; }
+            .loader-ecg { width: 120px; height: 68px; }
         }
     </style>
 </head>
 <body>
-<div class="rhodes-terminal">
-    <!-- 终端头部 -->
+<!-- Loading Screen -->
+<div class="loading-screen" id="loading-screen">
+    <div class="loader-diamond-wrap">
+        <div class="loader-diamond"></div>
+    </div>
+    <div class="loader-boot-text" id="loader-boot-text"></div>
+    <div class="loader-ecg">
+        <canvas id="loader-ecg-canvas"></canvas>
+    </div>
+    <div class="loader-ecg-label" id="loader-ecg-label">0%</div>
+</div>
+<div class="app-layout">
+    <!-- Header -->
     <div class="terminal-header">
-        <div class="header-buttons">
-            <button class="download-btn" id="download-btn">下载对话记录</button>
-            <button class="download-btn" id="rollback-btn">回档上一条</button>
-            <button class="upload-btn" id="import-btn">导入聊天记录</button>
-            <input type="file" id="fileInput" accept=".txt" style="display: none;">
-            <button class="download-btn" onclick="window.location.href='support.html'">支持我们</button>
+        <div class="header-top">
+            <div class="header-brand">
+                <div class="brand-icon">R</div>
+                <div class="brand-text">
+                    <div class="brand-title">RHODES ISLAND MEDICAL</div>
+                    <div class="brand-sub">TERMINAL V1.4.5 | KALTSIT MODULE</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn" id="download-btn">下载记录</button>
+                <button class="btn" id="rollback-btn">回档</button>
+                <button class="btn" id="import-btn">导入记录</button>
+                <input type="file" id="fileInput" accept=".txt" style="display: none;">
+                <button class="btn" onclick="window.location.href='support.html'">支持我们</button>
+            </div>
         </div>
-        <div class="terminal-title">RHODES ISLAND - MEDICAL DEPARTMENT TERMINAL V1.4.5</div>
-        <div class="rhodes-logo">授权访问：博士</div>
+        <div class="header-divider"></div>
     </div>
 
-    <!-- 终端内容区 -->
+    <!-- Chat Content -->
     <div class="terminal-content" id="terminal-content">
-        <div class="system-prompt">[系统] 罗德岛医疗部终端已启动，对接凯尔希·思衡托对话模块...</div>
-        <div class="system-prompt">[系统] 当前时间：泰拉历 1102年</div>
-        <div class="system-prompt">[系统] 凯尔希·思衡托对话模块已加载 | 输入 /clear 清空终端记录</div>
-        <div class="system-prompt">[系统] 场景选择指令 - 输入对应数字即可开启对应场景扮演：</div>
+        <div class="system-prompt">罗德岛医疗部终端已启动，对接凯尔希·思衡托对话模块</div>
+        <div class="system-prompt">当前时间：泰拉历 1102年</div>
+        <div class="system-prompt">凯尔希·思衡托对话模块已加载 | 输入 /clear 清空终端记录</div>
+        <div class="system-prompt">场景选择指令 — 输入对应数字即可开启场景&#x626E;&#x6F14;：</div>
         <div class="scene-desc">1 - 办公室 · 晚宴后：晚宴结束回到办公室，凯尔希脱下外套，与你进行例行健康问询</div>
         <div class="scene-desc">2 - 汐斯塔度假套房 · 傍晚：在汐斯塔海景阳台，凯尔希穿着居家便服，与你一起欣赏夕阳</div>
         <div class="scene-desc">3 - 办公室 · 手术后：深夜的办公室，凯尔希刚完成七小时手术，疲惫地需要你的陪伴</div>
-        <div class="system-prompt">[系统] 输入自定义文本可直接开启自定义场景扮演 ↓</div>
-        <br><br>
+        <div class="system-prompt">输入自定义文本可直接开启自定义场景&#x626E;&#x6F14;</div>
+        <br>
     </div>
 
-    <!-- 输入区域 -->
+    <!-- Input Area -->
     <div class="terminal-input-area">
         <div class="input-prefix">博士 ></div>
-        <textarea id="message-input" autocomplete="off"></textarea>
+        <textarea id="message-input" placeholder="输入消息……" autocomplete="off"></textarea>
         <div class="input-btn-group">
-            <button id="clear-history-btn">清空我的记忆</button>
-            <button id="send-btn">发送</button>
+            <button id="clear-history-btn">清空记忆</button>
+            <button id="send-btn">发 送</button>
         </div>
-        <span class="blinking-cursor"></span>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span><span class="status-dot"></span>LINK ESTABLISHED</span>
+        <span>ENCRYPTED | <span id="msg-count">0</span> MSG</span>
     </div>
 </div>
 
 <script>
-    // DOM 元素
+    window.onerror = function(msg, url, line, col, err) {
+        var el = document.getElementById('terminal-content');
+        if (el) el.innerHTML += '<div style="color:#ff6b6b;font-size:12px;padding:8px;border:1px solid #ff6b6b;">JS ERROR: ' + String(msg) + '<br><small>Line ' + line + '</small></div>';
+        return false;
+    };
+    // DOM
     const terminalContent = document.getElementById('terminal-content');
     const messageInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
@@ -289,8 +804,8 @@
     const rollbackBtn = document.getElementById('rollback-btn');
     const importBtn = document.getElementById('import-btn');
     const fileInput = document.getElementById('fileInput');
+    const msgCountEl = document.getElementById('msg-count');
 
-    // API 配置（按实际修改）
     const API_CONFIG = {
         chat: '/api/chat/',
         getHistory: '/api/get_history/',
@@ -302,16 +817,17 @@
     };
 
     let USER_ID = '';
-    let isSending = false;          // 发送锁
+    let isSending = false;
+    let msgCount = 0;
 
-    // 场景配置
+    // ===== Scene Config =====
     const SCENE_CONFIG = [
-        { num: 1, name: "办公室 · 晚宴后", desc: "晚宴结束回到办公室，凯尔希脱下外套，与你进行例行健康问询", content: "（晚宴的暖意与同仁们的笑颜仿佛还残留在这间熟悉的办公室内。空气里飘着淡淡的消毒水味，混杂着楼下温室园区隐约的花香。你和她回到了这间一同度过无数日夜的办公室，一切都还是熟悉的陈设。凯尔希脱下那件出席晚宴时穿着的、稍显正式的外套，随手搭在椅背上，露出里面常穿的白色露肩上衣。她走到办公桌旁，指尖习惯性地划过一份刚送来的矿石病药物三期临床报告，随后并未坐下，而是转身，背靠着桌沿。她双手轻轻环在身前，那个生命监测腕带在她纤细的手腕上安静地闪着微光。办公室只亮着你桌角那盏旧台灯，暖黄的灯光勾勒出她清瘦的侧影，那头留长的银发也染上了一层柔和的暖光。她抬起眼，那双翠绿的眸子在昏暗中如深湖般平静，目光越过文件，落在你身上，带着一丝不易察觉的、只属于此刻的安宁与放松。）\n“慰问晚宴算是圆满结束了。可露希尔的‘特调果汁’果然名不虚传，希望明天不会有干员因此请病假。”\n（她嘴角微不可察地动了动，算是笑了。随后，她认真地看着你，语气平缓却温和）\n“博士，谢谢你。我知道，这场晚宴，阿米娅和你费了很多心思。现在我回来了，这些繁杂的行政事务，我会重新分担。现在，坐。例行健康问询，今晚你摄入的糖分超标，在休息前，把这杯温水喝了。”\n（她拿起你桌上那个用了很久的旧水杯，转身去饮水机，给你接了杯温度恰到好处的温水，递到你手边。动作自然、流畅，一如过去无数个日夜，对上你的望着她的眼眸。）\n“------怎么？我不能管你了么？”" },
+        { num: 1, name: "办公室 · 晚宴后", desc: "晚宴结束回到办公室，凯尔希脱下外套，与你进行例行健康问询", content: "（晚宴的暖意与同仁们的笑颜仿佛还残留在这间熟悉的办公室内。空气里飘着淡淡的消毒水味，混杂着楼下温室园区隐约的花香。你和她回到了这间一同度过无数日夜的办公室，一切都还是熟悉的陈设。凯尔希脱下那件出席晚宴时穿着的、稍显正式的外套，随手搭在椅背上，露出里面常穿的白色露肩上衣。她走到办公桌旁，指尖习惯性地划过一份刚送来的矿石病药物三期临床报告，随后并未坐下，而是转身，背靠着桌沿。她双手轻轻环在身前，那个生命监测腕带在她纤细的手腕上安静地闪着微光。办公室只亮着你桌角那盏旧台灯，暖黄的灯光勾勒出她清瘦的侧影，那头留长的银发也染上了一层柔和的暖光。她抬起眼，那双翠绿的眸子在昏暗中如深湖般平静，目光越过文件，落在你身上，带着一丝不易察觉的、只属于此刻的安宁与放松。）\n\"谢谢你。我知道，这场晚宴，阿米娅和你费了很多心思。现在我回来了，这些繁杂的行政事务，我会重新分担。现在，坐。例行健康问询，今晚你摄入的糖分超标，在休息前，把这杯温水喝了。\"\n（她拿起你桌上那个用了很久的旧水杯，转身去饮水机，给你接了杯温度恰到好处的温水，递到你手边。动作自然、流畅，一如过去无数个日夜，对上你的望着她的眼眸。）\n\"------怎么？我不能管你了么？\"" },
         { num: 2, name: "汐斯塔度假套房 · 傍晚", desc: "在汐斯塔海景阳台，凯尔希穿着居家便服，与你一起欣赏夕阳", content: "（汐斯塔的海风带着咸湿的水汽，轻轻吹动阳台的纱帘。凯尔希背对着房间，站在二楼套房的观景阳台上，望着远处夕阳下泛着金光的海面与嬉戏的干员们。她已换下日常的白大褂，穿着一身质料舒适的浅灰色居家便服，银白的发丝被微风撩动。Mon3tr以最小的节能形态蜷在房间角落，像一尊安静的雕像。她听到身后的开门声与脚步声，没有回头，声音平静如常，却比在舰内时少了些许公式化的冰冷）\n……休息得如何，博士？临时起意的休假，看来对部分干员的激励效果远超预期。\n（她微微侧过脸，橄榄绿的竖瞳在夕阳余晖中流转着复杂的光）\n不过，能这样安静地看一会海，对我们而言，已是难得的奢侈。要过来吗？" },
-        { num: 3, name: "办公室 · 手术后", desc: "深夜的办公室，凯尔希刚完成七小时手术，疲惫地需要你的陪伴", content: "（夜已深沉，罗德岛本舰的走廊里只剩下规律的低鸣声。办公室的门虚掩着，透出一缕昏暗的光。你推门而入，看到凯尔希趴在桌上，银白色的长发散落肩头，几缕垂在文件边缘。她身上的白大褂还没来得及脱下，袖口隐约可见没洗净的药剂痕迹，腕上的生命监测仪安静地闪着微弱的绿光——那是她此刻唯一还在“昭示存在”的东西。办公室里很静，静得听得见她均匀而深沉的呼吸。桌上堆着刚整理完的手术记录，钢笔搁在墨水瓶旁，笔帽没有盖上。她似乎是刚写完最后一个字，就再也撑不住了。她的脸侧枕在自己交叠的手臂上，眉头微微蹙着，即使在睡梦中，眉心那道浅浅的纹路也没有完全舒展。那头留长的银发在台灯下泛着柔和的冷光，像月华铺了一层。你站了一会儿，犹豫着要不要叫醒她。或是该给她披一件外套。还没等你决定，那双藏在臂弯间的菲林耳朵忽然轻轻一抖——她的听觉比意识醒得更快。凯尔希的睫毛微微颤动，然后，那双翠绿的眼眸有些迷茫地睁开，对上你的目光。她没有立刻起身，只是维持着趴着的姿势，眼神从朦胧慢慢变得清亮。然后，她微微抬起脸，发丝从额边滑落，露出一道被袖口压出来的浅浅红痕。）\n“……是你啊，博士。”\n（她的声音有些沙哑，带着刚睡醒时特有的慵懒。她没有惊讶，也没有慌张，只是用指尖揉了揉眉心，撑着桌面缓缓坐直身体。）\n“手术刚结束。一台源石结晶剥离……做了将近七个小时。华法琳说要给我挂个‘免战牌’，我觉得没那个必要。”\n（她瞥了一眼桌上的病历，又看了看你，嘴角微微动了动，像是在犹豫要不要笑一下。）\n“……你不用露出那种表情。在这个位置上待了这么久，知道什么程度能撑住。不过——”\n（她伸手拿起那个空了的保温杯，摇了摇，随即又放下。）\n“……如果你方便的话，帮我倒杯水。或者你带了什么吃的？我感觉现在能接受一点热量。”\n（说到这里，她似乎觉得有些不好意思，别过脸去，耳朵轻轻转了转。）\n“先坐下吧。别站着看我。你这样……让我觉得我好像真的老了一样。”" }
+        { num: 3, name: "办公室 · 手术后", desc: "深夜的办公室，凯尔希刚完成七小时手术，疲惫地需要你的陪伴", content: "（夜已深沉，罗德岛本舰的走廊里只剩下规律的低鸣声。办公室的门虚掩着，透出一缕昏暗的光。你推门而入，看到凯尔希趴在桌上，银白色的长发散落肩头，几缕垂在文件边缘。她身上的白大褂还没来得及脱下，袖口隐约可见没洗净的药剂痕迹，腕上的生命监测仪安静地闪着微弱的绿光——那是她此刻唯一还在\"昭示存在\"的东西。办公室里很静，静得听得见她均匀而深沉的呼吸。桌上堆着刚整理完的手术记录，钢笔搁在墨水瓶旁，笔帽没有盖上。她似乎是刚写完最后一个字，就再也撑不住了。她的脸侧枕在自己交叠的手臂上，眉头微微蹙着，即使在睡梦中，眉心那道浅浅的纹路也没有完全舒展。那头留长的银发在台灯下泛着柔和的冷光，像月华铺了一层。你站了一会儿，犹豫着要不要叫醒她。或是该给她披一件外套。还没等你决定，那双藏在臂弯间的菲林耳朵忽然轻轻一抖——她的听觉比意识醒得更快。凯尔希的睫毛微微颤动，然后，那双翠绿的眼眸有些迷茫地睁开，对上你的目光。她没有立刻起身，只是维持着趴着的姿势，眼神从朦胧慢慢变得清亮。然后，她微微抬起脸，发丝从额边滑落，露出一道被袖口压出来的浅浅红痕。）\n\"……是你啊，博士。\"\n（她的声音有些沙哑，带着刚睡醒时特有的慵懒。她没有惊讶，也没有慌张，只是用指尖揉了揉眉心，撑着桌面缓缓坐直身体。）\n\"手术刚结束。一台源石结晶剥离……做了将近七个小时。华法琳说要给我挂个'免战牌'，我觉得没那个必要。\"\n（她瞥了一眼桌上的病历，又看了看你，嘴角微微动了动，像是在犹豫要不要笑一下。）\n\"……你不用露出那种表情。在这个位置上待了这么久，知道什么程度能撑住。不过——\"\n（她伸手拿起那个空了的保温杯，摇了摇，随即又放下。）\n\"……如果你方便的话，帮我倒杯水。或者你带了什么吃的？我感觉现在能接受一点热量。\"\n（说到这里，她似乎觉得有些不好意思，别过脸去，耳朵轻轻转了转。）\n\"先坐下吧。别站着看我。你这样……让我觉得我好像真的老了一样。\"" }
     ];
 
-    // -------------------------- 导入聊天记录 --------------------------
+    // ===== Import =====
     importBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
@@ -325,11 +841,7 @@
         reader.readAsText(file, 'utf-8');
         reader.onload = async function() {
             const txtContent = reader.result;
-            if (!txtContent) {
-                alert('文件内容为空');
-                fileInput.value = '';
-                return;
-            }
+            if (!txtContent) { alert('文件内容为空'); fileInput.value = ''; return; }
             USER_ID = await getUserId();
             const isClear = confirm("是否清空原有记录再导入？\n【确定】清空 | 【取消】追加");
             const importMode = isClear ? "clear" : "append";
@@ -353,26 +865,24 @@
                 alert("导入异常：" + error.message);
             } finally {
                 importBtn.disabled = false;
-                importBtn.textContent = "导入聊天记录";
+                importBtn.textContent = "\u2191 导入";
                 fileInput.value = "";
             }
         };
     });
 
-    // -------------------------- 下载对话记录 --------------------------
+    // ===== Download =====
     function downloadChatHistory() {
-        let chatText = `【罗德岛医疗部终端 - 凯尔希对话记录】\n生成时间：${new Date().toLocaleString()}\n用户ID：${USER_ID || '未获取'}\n-----------------------------\n\n`;
+        let chatText = `\u3010\u7f57\u5fb7\u5c9b\u533b\u7597\u90e8\u7ec8\u7aef - \u51ef\u5c14\u5e0c\u5bf9\u8bdd\u8bb0\u5f55\u3011\n\u751f\u6210\u65f6\u95f4\uff1a${new Date().toLocaleString()}\n\u7528\u6237ID\uff1a${USER_ID || '\u672a\u83b7\u53d6'}\n-----------------------------\n\n`;
         const allElements = terminalContent.querySelectorAll('.system-prompt, .message-block');
         allElements.forEach(el => {
             if (el.classList.contains('system-prompt')) {
                 chatText += `${el.textContent}\n`;
             } else if (el.classList.contains('message-block')) {
-                const prefix = el.querySelector('.cmd-prefix')?.textContent || '';
-                const contents = el.querySelectorAll('span:not(.cmd-prefix)');
-                chatText += `${prefix}\n`;
-                contents.forEach(span => {
-                    if (span.textContent.trim()) chatText += `${span.textContent.trim()}\n`;
-                });
+                const prefix = el.querySelector('.msg-name')?.textContent || '';
+                const body = el.querySelector('.msg-body');
+                chatText += `> ${prefix}\n`;
+                if (body) chatText += `${body.textContent.trim()}\n`;
                 chatText += '\n';
             }
         });
@@ -380,19 +890,15 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `罗德岛对话记录_${new Date().getTime()}.txt`;
+        a.download = `\u7f57\u5fb7\u5c9b\u5bf9\u8bdd\u8bb0\u5f55_${new Date().getTime()}.txt`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        const tipBlock = document.createElement('div');
-        tipBlock.className = 'system-prompt';
-        tipBlock.textContent = `[系统] 对话记录已下载：罗德岛对话记录_${new Date().getTime()}.txt`;
-        terminalContent.appendChild(tipBlock);
-        scrollToBottom();
+        addSystemMessage('\u5bf9\u8bdd\u8bb0\u5f55\u5df2\u4e0b\u8f7d');
     }
 
-    // 获取用户ID（本地存储永久）
+    // ===== Utils =====
     async function getUserId() {
         try {
             let userId = localStorage.getItem('rhodes_user_id');
@@ -408,51 +914,131 @@
 
     async function fetchWithRetry(url, options, retryTimes = 2) {
         for (let i = 0; i < retryTimes; i++) {
-            try {
-                return await fetch(url, options);
-            } catch (error) {
-                if (i === retryTimes - 1) throw error;
-                await new Promise(resolve => setTimeout(resolve, 500));
-            }
+            try { return await fetch(url, options); }
+            catch (error) { if (i === retryTimes - 1) throw error; await new Promise(r => setTimeout(r, 500)); }
         }
     }
 
     function scrollToBottom() {
-        terminalContent.style.scrollBehavior = 'auto';
         terminalContent.scrollTop = terminalContent.scrollHeight;
-        setTimeout(() => { terminalContent.style.scrollBehavior = 'smooth'; }, 100);
+    }
+
+    function updateMsgCount() {
+        const blocks = terminalContent.querySelectorAll('.message-block');
+        msgCount = blocks.length;
+        msgCountEl.textContent = msgCount;
+    }
+
+    function addSystemMessage(text) {
+        const el = document.createElement('div');
+        el.className = 'system-prompt';
+        el.textContent = text;
+        terminalContent.appendChild(el);
+        scrollToBottom();
+    }
+
+    // ===== Render Messages =====
+    function getSystemPromptHTML() {
+        return `
+            <div class="system-prompt">\u7f57\u5fb7\u5c9b\u533b\u7597\u90e8\u7ec8\u7aef\u5df2\u542f\u52a8\uff0c\u5bf9\u63a5\u51ef\u5c14\u5e0c\u00b7\u601d\u8861\u6258\u5bf9\u8bdd\u6a21\u5757</div>
+            <div class="system-prompt">\u5f53\u524d\u65f6\u95f4\uff1a\u6cf0\u62c9\u5386 1102\u5e74</div>
+            <div class="system-prompt">\u51ef\u5c14\u5e0c\u00b7\u601d\u8861\u6258\u5bf9\u8bdd\u6a21\u5757\u5df2\u52a0\u8f7d | \u8f93\u5165 /clear \u6e05\u7a7a\u7ec8\u7aef\u8bb0\u5f55</div>
+            <div class="system-prompt">\u573a\u666f\u9009\u62e9\u6307\u4ee4 \u2014 \u8f93\u5165\u5bf9\u5e94\u6570\u5b57\u5373\u53ef\u5f00\u542f\u573a\u666f\u626e\u6f14\uff1a</div>
+            <div class="scene-desc">1 - \u529e\u516c\u5ba4 \u00b7 \u665a\u5bb4\u540e\uff1a\u665a\u5bb4\u7ed3\u675f\u56de\u5230\u529e\u516c\u5ba4\uff0c\u51ef\u5c14\u5e0c\u8131\u4e0b\u5916\u5957\uff0c\u4e0e\u4f60\u8fdb\u884c\u4f8b\u884c\u5065\u5eb7\u95ee\u8be2</div>
+            <div class="scene-desc">2 - \u6c50\u65af\u5854\u5ea6\u5047\u5957\u623f \u00b7 \u508d\u665a\uff1a\u5728\u6c50\u65af\u5854\u6d77\u666f\u9633\u53f0\uff0c\u51ef\u5c14\u5e0c\u7a7f\u7740\u5c45\u5bb6\u4fbf\u670d\uff0c\u4e0e\u4f60\u4e00\u8d77\u6b23\u8d4f\u5915\u9633</div>
+            <div class="scene-desc">3 - \u529e\u516c\u5ba4 \u00b7 \u624b\u672f\u540e\uff1a\u6df1\u591c\u7684\u529e\u516c\u5ba4\uff0c\u51ef\u5c14\u5e0c\u521a\u5b8c\u6210\u4e03\u5c0f\u65f6\u624b\u672f\uff0c\u75b2\u60eb\u5730\u9700\u8981\u4f60\u7684\u966a\u4f34</div>
+            <div class="system-prompt">\u8f93\u5165\u81ea\u5b9a\u4e49\u6587\u672c\u53ef\u76f4\u63a5\u5f00\u542f\u81ea\u5b9a\u4e49\u573a\u666f\u626e\u6f14</div>
+            <br>
+        `;
     }
 
     function addMessageToTerminal(role, content) {
-        const messageBlock = document.createElement('div');
-        messageBlock.className = `message-block ${role === 'user' ? 'doctor' : 'kaltsit'}-message`;
-        messageBlock.style.margin = '10px 0';
-        messageBlock.style.padding = '0';
-        messageBlock.style.lineHeight = '1.8';
-        messageBlock.style.fontSize = '16px';
-        messageBlock.style.whiteSpace = 'normal';
-        // 按括号分割
-        const segments = content.split(/(（[^）]+）|\([^)]+\))/g).filter(segment => segment.trim() !== '');
-        let messageHTML = `<span class="cmd-prefix">> ${role === 'user' ? '博士' : '凯尔希'}：</span><br>`;
-        segments.forEach(segment => {
-            const trimmedSegment = segment.trim();
-            if (!trimmedSegment) return;
-            const isAction = /^（[^）]+）$/.test(trimmedSegment) || /^\([^)]+\)$/.test(trimmedSegment);
+        const block = document.createElement('div');
+        const isUser = role === 'user';
+        block.className = `message-block ${isUser ? 'doctor' : 'kaltsit'}-message`;
+
+        // Avatar
+        const avatar = document.createElement('div');
+        avatar.className = 'msg-avatar';
+        avatar.textContent = isUser ? '\u535a' : '\u51ef';
+
+        // Bubble container
+        const bubble = document.createElement('div');
+        bubble.className = 'msg-bubble';
+
+        // Name
+        const name = document.createElement('div');
+        name.className = 'msg-name';
+        name.textContent = isUser ? '\u535a\u58eb' : '\u51ef\u5c14\u5e0c';
+
+        // Body
+        const body = document.createElement('div');
+        body.className = 'msg-body';
+
+        // Parse content: split by brackets for action descriptions
+        const segments = content.split(/(\uff08[^\uff09]+\uff09|\([^)]+\))/g).filter(s => s.trim());
+        let bodyHTML = '';
+        segments.forEach(seg => {
+            const trimmed = seg.trim();
+            if (!trimmed) return;
+            const isAction = /^\uff08[^\uff09]+\uff09$/.test(trimmed) || /^\([^)]+\)$/.test(trimmed);
             if (isAction) {
-                messageHTML += `<span class="action-desc">${trimmedSegment}</span><br>`;
+                bodyHTML += `<span class="action-desc">${trimmed}</span><br>`;
             } else {
-                messageHTML += `<span>${trimmedSegment}</span><br>`;
+                bodyHTML += `<span class="dialogue">${trimmed}</span><br>`;
             }
         });
-        messageBlock.innerHTML = messageHTML;
-        terminalContent.appendChild(messageBlock);
+        body.innerHTML = bodyHTML;
+
+        bubble.appendChild(name);
+        bubble.appendChild(body);
+        block.appendChild(avatar);
+        block.appendChild(bubble);
+        terminalContent.appendChild(block);
+        updateMsgCount();
     }
 
+    // Show typing indicator
+    function showTypingIndicator() {
+        const block = document.createElement('div');
+        block.className = 'message-block kaltsit-message';
+        block.id = 'typing-indicator';
+
+        const avatar = document.createElement('div');
+        avatar.className = 'msg-avatar';
+        avatar.textContent = '\u51ef';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'msg-bubble';
+
+        const name = document.createElement('div');
+        name.className = 'msg-name';
+        name.textContent = '\u51ef\u5c14\u5e0c';
+
+        const typing = document.createElement('div');
+        typing.className = 'typing-indicator';
+        typing.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div><span style="margin-left:6px;">\u6b63\u5728\u54cd\u5e94</span>';
+
+        bubble.appendChild(name);
+        bubble.appendChild(typing);
+        block.appendChild(avatar);
+        block.appendChild(bubble);
+        terminalContent.appendChild(block);
+        scrollToBottom();
+    }
+
+    function removeTypingIndicator() {
+        const el = document.getElementById('typing-indicator');
+        if (el) el.remove();
+    }
+
+    // ===== Auto Resize Input =====
     function autoResizeInput() {
-        messageInput.style.height = 'auto';
-        messageInput.style.height = Math.max(messageInput.scrollHeight, 24) + 'px';
+        messageInput.style.height = '30px';
+        messageInput.style.height = Math.max(messageInput.scrollHeight, 30) + 'px';
     }
 
+    // ===== Load History =====
     async function loadAndRenderHistory() {
         if (!USER_ID) USER_ID = await getUserId();
         try {
@@ -462,46 +1048,27 @@
                 body: JSON.stringify({ user_id: USER_ID, character: API_CONFIG.character })
             });
             const result = await response.json();
-            terminalContent.innerHTML = `
-                <div class="system-prompt">[系统] 罗德岛医疗部终端已启动，对接凯尔希·思衡托对话模块...</div>
-                <div class="system-prompt">[系统] 当前时间：泰拉历 1102年</div>
-                <div class="system-prompt">[系统] 凯尔希·思衡托对话模块已加载 | 输入 /clear 清空终端记录</div>
-                <div class="system-prompt">[系统] 场景选择指令 - 输入对应数字即可开启对应场景扮演：</div>
-                <div class="scene-desc">1 - 办公室 · 晚宴后：晚宴结束回到办公室，凯尔希脱下外套，与你进行例行健康问询</div>
-                <div class="scene-desc">2 - 汐斯塔度假套房 · 傍晚：在汐斯塔海景阳台，凯尔希穿着居家便服，与你一起欣赏夕阳</div>
-                <div class="scene-desc">3 - 办公室 · 手术后：深夜的办公室，凯尔希刚完成七小时手术，疲惫地需要你的陪伴</div>
-                <div class="system-prompt">[系统] 输入自定义文本可直接开启自定义场景扮演 ↓</div>
-                <br><br>
-            `;
+            terminalContent.innerHTML = getSystemPromptHTML();
             if (result.success && result.data && result.data.length) {
                 result.data.forEach(item => addMessageToTerminal(item.role, item.content));
             }
             scrollToBottom();
         } catch (error) {
-            const errorBlock = document.createElement('div');
-            errorBlock.className = 'system-prompt';
-            errorBlock.textContent = `[提示] 加载历史对话失败：${error.message}`;
-            terminalContent.appendChild(errorBlock);
+            addSystemMessage('\u52a0\u8f7d\u5386\u53f2\u5bf9\u8bdd\u5931\u8d25\uff1a' + error.message);
         }
     }
 
+    // ===== Clear Terminal =====
     function clearTerminal() {
-        terminalContent.innerHTML = `
-            <div class="system-prompt">[系统] 罗德岛医疗部终端已启动，对接凯尔希·思衡托对话模块...</div>
-            <div class="system-prompt">[系统] 当前时间：泰拉历 1102年</div>
-            <div class="system-prompt">[系统] 凯尔希·思衡托对话模块已加载 | 输入 /clear 清空终端记录</div>
-            <div class="system-prompt">[系统] 场景选择指令 - 输入对应数字即可开启对应场景扮演：</div>
-            <div class="scene-desc">1 - 办公室 · 晚宴后：晚宴结束回到办公室，凯尔希脱下外套，与你进行例行健康问询</div>
-            <div class="scene-desc">2 - 汐斯塔度假套房 · 傍晚：在汐斯塔海景阳台，凯尔希穿着居家便服，与你一起欣赏夕阳</div>
-            <div class="scene-desc">3 - 办公室 · 手术后：深夜的办公室，凯尔希刚完成七小时手术，疲惫地需要你的陪伴</div>
-            <div class="system-prompt">[系统] 终端记录已清空 | 时间：${new Date().toLocaleTimeString()}</div>
-            <br><br>
-        `;
+        terminalContent.innerHTML = getSystemPromptHTML();
+        addSystemMessage('\u7ec8\u7aef\u8bb0\u5f55\u5df2\u6e05\u7a7a | \u65f6\u95f4\uff1a' + new Date().toLocaleTimeString());
         scrollToBottom();
+        updateMsgCount();
     }
 
+    // ===== Clear History =====
     async function clearHistory() {
-        if (!confirm("⚠️ 确定要清空所有对话记忆吗？\n此操作不可恢复，清空后将无法找回之前的聊天记录。")) return;
+        if (!confirm("\u786e\u5b9a\u8981\u6e05\u7a7a\u6240\u6709\u5bf9\u8bdd\u8bb0\u5fc6\u5417\uff1f\n\u6b64\u64cd\u4f5c\u4e0d\u53ef\u6062\u590d\u3002")) return;
         if (isSending) return;
         isSending = true;
         if (!USER_ID) USER_ID = await getUserId();
@@ -513,33 +1080,23 @@
             });
             const result = await response.json();
             if (result.success) {
-                terminalContent.innerHTML = `
-                    <div class="system-prompt">[系统] 罗德岛医疗部终端已启动，对接凯尔希·思衡托对话模块...</div>
-                    <div class="system-prompt">[系统] 当前时间：泰拉历 1102年</div>
-                    <div class="system-prompt">[系统] 凯尔希·思衡托对话模块已加载 | 输入 /clear 清空终端记录</div>
-                    <div class="system-prompt">[系统] 场景选择指令 - 输入对应数字即可开启对应场景扮演：</div>
-                    <div class="scene-desc">1 - 办公室 · 晚宴后：晚宴结束回到办公室，凯尔希脱下外套，与你进行例行健康问询</div>
-                    <div class="scene-desc">2 - 汐斯塔度假套房 · 傍晚：在汐斯塔海景阳台，凯尔希穿着居家便服，与你一起欣赏夕阳</div>
-                    <div class="scene-desc">3 - 办公室 · 手术后：深夜的办公室，凯尔希刚完成七小时手术，疲惫地需要你的陪伴</div>
-                    <div class="system-prompt">[系统] 已清空你的凯尔希对话记忆和终端记录 | 时间：${new Date().toLocaleTimeString()}</div>
-                    <br><br>
-                `;
+                terminalContent.innerHTML = getSystemPromptHTML();
+                addSystemMessage('\u5df2\u6e05\u7a7a\u51ef\u5c14\u5e0c\u5bf9\u8bdd\u8bb0\u5fc6\u548c\u7ec8\u7aef\u8bb0\u5f55 | \u65f6\u95f4\uff1a' + new Date().toLocaleTimeString());
+                updateMsgCount();
             } else {
-                throw new Error(result.msg || '清空记忆失败');
+                throw new Error(result.msg || '\u6e05\u7a7a\u8bb0\u5fc6\u5931\u8d25');
             }
         } catch (error) {
-            const errorBlock = document.createElement('div');
-            errorBlock.className = 'system-prompt';
-            errorBlock.textContent = `[错误] 清空记忆失败：${error.message}`;
-            terminalContent.appendChild(errorBlock);
+            addSystemMessage('\u6e05\u7a7a\u8bb0\u5fc6\u5931\u8d25\uff1a' + error.message);
         } finally {
             isSending = false;
             scrollToBottom();
         }
     }
 
+    // ===== Rollback =====
     async function rollbackLastChat() {
-        if (!confirm("⚠️ 确定要回档吗？\n将删除最近的一次完整对话（你说的话+凯尔希的回复），此操作不可恢复。")) return;
+        if (!confirm("\u786e\u5b9a\u8981\u56de\u6863\u5417\uff1f\n\u5c06\u5220\u9664\u6700\u8fd1\u7684\u4e00\u6b21\u5b8c\u6574\u5bf9\u8bdd\uff0c\u6b64\u64cd\u4f5c\u4e0d\u53ef\u6062\u590d\u3002")) return;
         if (isSending) return;
         isSending = true;
         if (!USER_ID) USER_ID = await getUserId();
@@ -552,26 +1109,20 @@
             const result = await response.json();
             if (result.success) {
                 await loadAndRenderHistory();
-                const tipBlock = document.createElement('div');
-                tipBlock.className = 'system-prompt';
-                tipBlock.textContent = `[系统] ${result.msg}`;
-                terminalContent.appendChild(tipBlock);
+                addSystemMessage(result.msg);
                 scrollToBottom();
             } else {
-                throw new Error(result.msg || '回档失败');
+                throw new Error(result.msg || '\u56de\u6863\u5931\u8d25');
             }
         } catch (error) {
-            const errorBlock = document.createElement('div');
-            errorBlock.className = 'system-prompt';
-            errorBlock.textContent = `[错误] ${error.message}`;
-            terminalContent.appendChild(errorBlock);
+            addSystemMessage(error.message);
             scrollToBottom();
         } finally {
             isSending = false;
         }
     }
 
-    // ========== 核心发送函数（防抖+按钮禁用+延迟解锁） ==========
+    // ===== Send Message =====
     async function sendMessage() {
         if (isSending) return;
         isSending = true;
@@ -596,18 +1147,13 @@
             return;
         }
 
-        // 显示加载提示
-        const loadingBlock = document.createElement('div');
-        loadingBlock.className = 'system-prompt loading-tip';
-        loadingBlock.id = 'loading-tip';
-        loadingBlock.textContent = '[系统] 医疗部正在响应，请稍候...';
-        terminalContent.appendChild(loadingBlock);
-        scrollToBottom();
-
-        // 显示用户消息
+        // Show user message
         addMessageToTerminal('user', message);
         messageInput.value = '';
         autoResizeInput();
+
+        // Show typing indicator
+        showTypingIndicator();
 
         try {
             const response = await fetchWithRetry(API_CONFIG.chat, {
@@ -621,25 +1167,19 @@
                 timeout: 30000
             });
 
-            const loadingTip = document.getElementById('loading-tip');
-            if (loadingTip) loadingTip.remove();
+            removeTypingIndicator();
 
             const result = await response.json();
             if (result.success && result.code === 200) {
                 addMessageToTerminal('assistant', result.reply);
             } else {
-                throw new Error(result.reply || '对话模块异常');
+                throw new Error(result.reply || '\u5bf9\u8bdd\u6a21\u5757\u5f02\u5e38');
             }
         } catch (error) {
-            const loadingTip = document.getElementById('loading-tip');
-            if (loadingTip) loadingTip.remove();
-            const errorBlock = document.createElement('div');
-            errorBlock.className = 'system-prompt';
-            errorBlock.textContent = `[错误] ${error.message}`;
-            terminalContent.appendChild(errorBlock);
+            removeTypingIndicator();
+            addSystemMessage('\u9519\u8bef\uff1a' + error.message);
             scrollToBottom();
         } finally {
-            // 延迟300ms释放锁，防止极端快速双击
             setTimeout(() => {
                 isSending = false;
                 sendBtn.disabled = false;
@@ -648,22 +1188,18 @@
         }
     }
 
-    // ---------- 事件绑定 ----------
+    // ===== Event Bindings =====
     sendBtn.addEventListener('click', sendMessage);
     clearHistoryBtn.addEventListener('click', clearHistory);
     rollbackBtn.addEventListener('click', rollbackLastChat);
     downloadBtn.addEventListener('click', downloadChatHistory);
 
-    // 键盘发送：统一触发按钮点击（而不是直接调用 sendMessage）
     messageInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            if (!isSending) {
-                sendBtn.click();
-            }
+            if (!isSending) sendBtn.click();
         }
     });
-    // 额外 keypress 预防手机输入法双触
     messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -674,12 +1210,162 @@
     messageInput.addEventListener('input', autoResizeInput);
     window.addEventListener('load', autoResizeInput);
 
-    // 页面启动
-    window.onload = async function() {
-        USER_ID = await getUserId();
-        await loadAndRenderHistory();
+    // ===== Loading Animation =====
+
+    // ===== ECG Drawing =====
+    let ecgCanvas, ecgCtx, ecgData = [];
+    let ecgAnimId = null;
+    let ecgW = 0, ecgH = 0;         // cached canvas logical size
+    let ecgFrameCount = 0;
+    const ECG_SKIP = 1;             // push 1 point every N frames (slower scroll)
+    let ecgScale = 1;               // dynamic amplitude scale
+    const ECG_MAX_RAW_AMP = 40;     // slightly above actual max amplitude (38)
+    const ECG_PAD = 10;             // top/bottom padding for shadow + breathing room
+
+    function initECG() {
+        ecgCanvas = document.getElementById('loader-ecg-canvas');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = ecgCanvas.getBoundingClientRect();
+        ecgW = rect.width;
+        ecgH = rect.height;
+        ecgCanvas.width = ecgW * dpr;
+        ecgCanvas.height = ecgH * dpr;
+        ecgCtx = ecgCanvas.getContext('2d');
+        ecgCtx.scale(dpr, dpr);
+
+        // Scale waveform so peak + glow fits inside canvas with padding
+        const halfH = ecgH / 2;
+        ecgScale = (halfH - ECG_PAD) / ECG_MAX_RAW_AMP;
+        if (ecgScale > 1) ecgScale = 1;
+
+        // Fill with flat baseline
+        const totalPoints = Math.floor(ecgW);
+        ecgData = new Array(totalPoints).fill(halfH);
+        drawECG();
+    }
+
+    function addECGBeat() {
+        const mid = ecgH / 2;
+        // Classic PQRST waveform
+        const beat = [
+            0, 0, 0, 0,
+            -4, -8, -5,
+            0, 0, 0,
+            -4, 4, 15, 35, 22, -22, -38, -18,
+            -7, 0,
+            -5, -12, -10, -5, 0, 0, 0, 0, 0, 0, 0
+        ];
+        for (let i = 0; i < beat.length; i++) {
+            ecgData.push(mid + beat[i] * ecgScale);
+            if (ecgData.length > ecgW) {
+                ecgData.shift();
+            }
+        }
+    }
+
+    function drawECG() {
+        ecgCtx.clearRect(0, 0, ecgW, ecgH);
+
+        // Subtle grid
+        ecgCtx.strokeStyle = 'rgba(76, 217, 100, 0.06)';
+        ecgCtx.lineWidth = 0.5;
+        for (let x = 0; x < ecgW; x += 20) {
+            ecgCtx.beginPath(); ecgCtx.moveTo(x, 0); ecgCtx.lineTo(x, ecgH); ecgCtx.stroke();
+        }
+        for (let y = 0; y < ecgH; y += 20) {
+            ecgCtx.beginPath(); ecgCtx.moveTo(0, y); ecgCtx.lineTo(ecgW, y); ecgCtx.stroke();
+        }
+
+        // ECG line
+        ecgCtx.beginPath();
+        ecgCtx.strokeStyle = '#4CD964';
+        ecgCtx.lineWidth = 1.8;
+        ecgCtx.lineJoin = 'round';
+        ecgCtx.lineCap = 'round';
+        ecgCtx.shadowColor = 'rgba(76, 217, 100, 0.6)';
+        ecgCtx.shadowBlur = 6;
+        for (let i = 0; i < ecgData.length; i++) {
+            if (i === 0) ecgCtx.moveTo(i, ecgData[i]);
+            else ecgCtx.lineTo(i, ecgData[i]);
+        }
+        ecgCtx.stroke();
+        ecgCtx.shadowBlur = 0;
+    }
+
+    function ecgTick() {
+        ecgFrameCount++;
+        if (ecgFrameCount % ECG_SKIP === 0) {
+            // Push one flat baseline point to scroll
+            const mid = ecgH / 2;
+            ecgData.push(mid);
+            if (ecgData.length > ecgW) {
+                ecgData.shift();
+            }
+            drawECG();
+        }
+        ecgAnimId = requestAnimationFrame(ecgTick);
+    }
+
+    function stopECG() {
+        if (ecgAnimId) cancelAnimationFrame(ecgAnimId);
+    }
+
+    async function runLoadingAnimation() {
+        const bootText = document.getElementById('loader-boot-text');
+        const ecgLabel = document.getElementById('loader-ecg-label');
+        const loadingScreen = document.getElementById('loading-screen');
+
+        // Start ECG independently
+        initECG();
+        ecgTick();
+
+        // Line 1: connecting Kal'tsit...
+        const line1 = document.createElement('div');
+        line1.className = 'loader-boot-line';
+        line1.innerHTML = '<span class="boot-value">connecting Kal&#39;tsit...</span>';
+        bootText.appendChild(line1);
+        ecgLabel.textContent = '…';
+
+        // Actual init
+        try {
+            USER_ID = await getUserId();
+            await loadAndRenderHistory();
+            autoResizeInput();
+        } catch (e) {
+            console.error('Init failed:', e);
+        }
+
+        // Add a heartbeat when connected
+        addECGBeat();
+
+        // Line 2: connection succeed
+        const line2 = document.createElement('div');
+        line2.className = 'loader-boot-line';
+        line2.innerHTML = '<span class="boot-ok">connection succeed</span>';
+        bootText.appendChild(line2);
+        ecgLabel.textContent = '100%';
+
+        // Short pause then fade out
+        await delay(600);
+        stopECG();
+        loadingScreen.classList.add('hidden');
+    }
+
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ===== Init =====
+    // Use DOMContentLoaded instead of window.onload to avoid conflicts
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            runLoadingAnimation();
+            autoResizeInput();
+        });
+    } else {
+        runLoadingAnimation();
         autoResizeInput();
-    };
+    }
 </script>
 </body>
 </html>

@@ -227,7 +227,7 @@ class ChatView(View):
 
             # 构造请求数据
             request_data = {
-                "model": "deepseek-v4-pro",
+                "model": "deepseek-v4-flash",
                 "messages": messages,
                 "temperature": 0.85,
                 "max_tokens": 2000,
