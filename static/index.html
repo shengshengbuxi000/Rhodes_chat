@@ -865,7 +865,7 @@
                 alert("导入异常：" + error.message);
             } finally {
                 importBtn.disabled = false;
-                importBtn.textContent = "导入记录";
+                importBtn.textContent = "\u2191 导入";
                 fileInput.value = "";
             }
         };
@@ -918,18 +918,75 @@
         }
     }
 
-    // ===== Utils =====
-    async function getUserId() {
+    // ===== User ID — 多层回退，杜绝每次重启清空记录 =====
+    let _cachedUserId = null;
+
+    function setCookie(name, value, days) {
         try {
-            let userId = localStorage.getItem('rhodes_user_id');
-            if (!userId) {
-                userId = 'user_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-                localStorage.setItem('rhodes_user_id', userId);
+            var expires = '';
+            if (days) {
+                var d = new Date();
+                d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+                expires = '; expires=' + d.toUTCString();
             }
-            return userId;
+            document.cookie = name + '=' + encodeURIComponent(value) + expires + '; path=/; SameSite=Lax';
+        } catch(e) {}
+    }
+
+    function getCookie(name) {
+        try {
+            var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : null;
         } catch(e) {
-            return 'fallback_user_' + Date.now();
+            return null;
         }
+    }
+
+    function generateRandomId() {
+        var arr = new Uint32Array(2);
+        crypto.getRandomValues(arr);
+        return 'user_' + arr[0].toString(36) + arr[1].toString(36);
+    }
+
+    async function getUserId() {
+        if (_cachedUserId) return _cachedUserId;
+
+        // 第一层：Cookie（最可靠，跨浏览器重启持久化）
+        var cookieId = getCookie('rhodes_user_id');
+        if (cookieId) {
+            _cachedUserId = cookieId;
+            // 同步到 localStorage 作为备份
+            try { localStorage.setItem('rhodes_user_id', cookieId); } catch(e) {}
+            return _cachedUserId;
+        }
+
+        // 第二层：localStorage
+        try {
+            var localId = localStorage.getItem('rhodes_user_id');
+            if (localId) {
+                _cachedUserId = localId;
+                setCookie('rhodes_user_id', localId, 365);
+                return _cachedUserId;
+            }
+        } catch(e) {}
+
+        // 第三层：服务端 IP-based ID（稳定，同IP同ID）
+        try {
+            var resp = await fetch(API_CONFIG.getIpUserId);
+            var data = await resp.json();
+            if (data.success && data.user_id) {
+                _cachedUserId = data.user_id;
+                setCookie('rhodes_user_id', _cachedUserId, 365);
+                try { localStorage.setItem('rhodes_user_id', _cachedUserId); } catch(e) {}
+                return _cachedUserId;
+            }
+        } catch(e) {}
+
+        // 第四层：终极保底 — 生成随机ID并尽力持久化
+        _cachedUserId = generateRandomId();
+        setCookie('rhodes_user_id', _cachedUserId, 365);
+        try { localStorage.setItem('rhodes_user_id', _cachedUserId); } catch(e) {}
+        return _cachedUserId;
     }
 
     async function fetchWithRetry(url, options, retryTimes = 2) {
