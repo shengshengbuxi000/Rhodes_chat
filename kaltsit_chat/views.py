@@ -78,12 +78,12 @@ def async_save_chat(user_id, character, role, content):
     
 @sync_to_async
 def async_get_history(user_id, character):
-    history = ChatHistory.objects.filter(user_id=user_id, character=character).order_by('create_time')
+    history = ChatHistory.objects.filter(user_id=user_id, character=character).order_by('id')
     return list(history.values('role', 'content'))[-MAX_HISTORY_LENGTH:]
     
 @sync_to_async
 def async_get_all_history(user_id, character):
-    history = ChatHistory.objects.filter(user_id=user_id, character=character).order_by('create_time')
+    history = ChatHistory.objects.filter(user_id=user_id, character=character).order_by('id')
     return list(history.values('role', 'content', 'create_time'))
 
 @sync_to_async
@@ -296,7 +296,6 @@ class DownloadHistoryView(View):
         character = 'kaltsit'
 
         history = await async_get_all_history(user_id, character)
-
         txt_content = "=== 罗德岛医疗部终端 - 聊天记录 ===\n"
         txt_content += f"导出时间：{timezone.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
         txt_content += f"用户ID：{user_id[:8]}...\n"
@@ -321,7 +320,7 @@ def async_rollback_last_chat(user_id, character):
     last_two = list(ChatHistory.objects.filter(
         user_id=user_id, 
         character=character
-    ).order_by('-create_time')[:2])
+    ).order_by('-id')[:2])
     
     ids_to_delete = [record.id for record in last_two]
     
@@ -367,14 +366,72 @@ def parse_chat_txt(txt_content: str):
         "凯尔希": "assistant"
     }
 
+    # 系统提示行的特征前缀，这些行不应作为对话内容导入
+    SYSTEM_PROMPT_PREFIXES = (
+        '罗德岛医疗部终端',
+        '当前时间：',
+        '场景选择',
+        '输入自定义',
+        '输入 /clear',
+        '终端记录已清空',
+        '已清空',
+        '对话记录已下载',
+        '加载历史对话失败',
+        '下载失败',
+        '错误：',
+        '正在处理中',
+        '回档',
+        '已回档',
+        '导入成功',
+        '导入失败',
+        '导入异常',
+        '缺少参数',
+        '未解析到有效记录',
+    )
+
+    def is_system_line(line):
+        """判断是否为系统提示行（不应导入的内容）"""
+        stripped = line.strip()
+        if not stripped:
+            return False
+        for prefix in SYSTEM_PROMPT_PREFIXES:
+            if stripped.startswith(prefix):
+                return True
+        # 场景描述行（如 "1 - 办公室..."）
+        if len(stripped) > 3 and stripped[0] in '123' and stripped[1:3] in (' -', '－', '- ', '－'):
+            return True
+        return False
+
     for line in lines:
         raw_line = line.rstrip('\n')
         
+        # 跳过文件头
         if raw_line.startswith('【罗德岛') or raw_line.startswith('生成时间：') or raw_line.startswith('用户ID：'):
             continue
         if raw_line.startswith('-----------------------------'):
             continue
         if raw_line.startswith('[系统]'):
+            continue
+        # 跳过后端下载格式的时间戳行 [2024-01-01 12:00:00]
+        if raw_line.startswith('[') and raw_line.endswith(']') and len(raw_line) > 6:
+            # 检查是否为时间戳行 [YYYY-MM-DD HH:MM:SS] 或角色行 [博士]/[凯尔希]
+            inner = raw_line[1:-1].strip()
+            if inner in ROLE_MAP:
+                # 这是后端格式的角色行 [博士]/[凯尔希]
+                if current_role and current_content:
+                    chat_list.append({
+                        "role": current_role,
+                        "content": '\n'.join(current_content).strip()
+                    })
+                    current_content = []
+                current_role = ROLE_MAP[inner]
+                continue
+            else:
+                # 时间戳行，跳过
+                continue
+        
+        # 跳过系统提示行（防止系统消息被当作对话内容导入）
+        if is_system_line(raw_line):
             continue
         
         if raw_line.startswith('> '):

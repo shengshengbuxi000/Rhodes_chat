@@ -25,7 +25,7 @@ class ChatHistory(models.Model):
     create_time = models.DateTimeField(default=timezone.now, verbose_name='创建时间')
 
     class Meta:
-        ordering = ['create_time']
+        ordering = ['id']
         verbose_name = '对话历史'
         verbose_name_plural = '对话历史'
 
